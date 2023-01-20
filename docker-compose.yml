@@ -1,0 +1,42 @@
+version: "3.1"
+services:
+  www:
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - ./php/public_html:/var/www/html/
+    links:
+      - db-server
+    networks:
+      - default
+  db-server:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: application-database
+      MYSQL_USER: databaseuser
+      MYSQL_PASSWORD: databasepass
+      MYSQL_ROOT_PASSWORD: toor
+    volumes:
+      - ./mysql/dump:/docker-entrypoint-initdb.d
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/data:/var/lib/mysql
+    ports:
+      - "9906:3306"
+    networks:
+      - default
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links: 
+      - db-server:db-server
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: db-server
+      MYSQL_ROOT_PASSWORD: toor
+    restart: always   
+    depends_on:
+        - db-server
